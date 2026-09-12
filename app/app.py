@@ -4,7 +4,6 @@ import numpy as np
 from PIL import Image
 import os
 import sys
-import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.spatial_engine import SpatialVisionEngine
@@ -36,7 +35,7 @@ with st.sidebar:
     zone_y2 = st.slider("Zone Bottom-Right Y %", 0, 100, 90)
     
     st.markdown("---")
-    input_mode = st.radio("Telemetry Source:", ["Upload Test Image", "Live Webcam Feed"])
+    input_mode = st.radio("Telemetry Source:", ["Upload Test Image", "Browser Camera (Live Snapshot)"])
 
 def get_relative_polygon(w, h):
     return [
@@ -46,47 +45,36 @@ def get_relative_polygon(w, h):
         (int(w * (zone_x1 / 100)), int(h * (zone_y2 / 100)))
     ]
 
+def process_and_display(img_pil):
+    frame_bgr = cv2.cvtColor(np.array(img_pil), cv2.COLOR_RGB2BGR)
+    h, w = frame_bgr.shape[:2]
+    zone = get_relative_polygon(w, h)
+    
+    result = engine.process_frame(frame_bgr, zone_polygon=zone)
+    
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Detected Entities", result["detections_count"])
+    m2.metric("Inference Latency", f"{result['latency_ms']} ms")
+    m3.metric("Throughput Benchmark", f"{result['fps']} FPS")
+    m4.metric("Perimeter Status", "BREACH DETECTED" if result["intrusion_detected"] else "SECURE")
+    
+    if result["intrusion_detected"]:
+        st.error("🚨 PERIMETER BREACH: Subject detected inside restricted hazard polygon!")
+    else:
+        st.success("✅ PERIMETER SECURE: No unauthorized entities detected inside polygon.")
+
+    annotated_rgb = cv2.cvtColor(result["annotated_frame"], cv2.COLOR_BGR2RGB)
+    st.image(annotated_rgb, use_container_width=True)
+
 if input_mode == "Upload Test Image":
     uploaded = st.file_uploader("Select an image to analyze:", type=["jpg", "jpeg", "png"])
     if uploaded:
         image = Image.open(uploaded).convert("RGB")
-        frame_bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        h, w = frame_bgr.shape[:2]
-        zone = get_relative_polygon(w, h)
-        
-        result = engine.process_frame(frame_bgr, zone_polygon=zone)
-        
-        m1, m2, m3, m4 = st.columns(4)
-        m1.metric("Subjects Count", result["detections_count"])
-        m2.metric("Inference Latency", f"{result['latency_ms']} ms")
-        m3.metric("Effective FPS", f"{result['fps']}")
-        m4.metric("Safety Zone State", "BREACH DETECTED" if result["intrusion_detected"] else "SECURE")
-        
-        if result["intrusion_detected"]:
-            st.error("🚨 PERIMETER BREACH: Subject detected inside restricted hazard polygon!")
-        else:
-            st.success("✅ PERIMETER SECURE: No unauthorized entities detected inside polygon.")
+        process_and_display(image)
 
-        annotated_rgb = cv2.cvtColor(result["annotated_frame"], cv2.COLOR_BGR2RGB)
-        st.image(annotated_rgb, use_container_width=True)
-
-elif input_mode == "Live Webcam Feed":
-    st.info("Ensure browser camera access is granted. Toggle the checkbox below to stream inference.")
-    run_cam = st.checkbox("Initialize Camera Stream")
-    FRAME_WINDOW = st.image([])
-    
-    if run_cam:
-        cap = cv2.VideoCapture(0)
-        while run_cam:
-            ret, frame = cap.read()
-            if not ret:
-                st.warning("Failed to access camera stream.")
-                break
-            h, w = frame.shape[:2]
-            zone = get_relative_polygon(w, h)
-            result = engine.process_frame(frame, zone_polygon=zone)
-            
-            disp = cv2.cvtColor(result["annotated_frame"], cv2.COLOR_BGR2RGB)
-            FRAME_WINDOW.image(disp)
-            time.sleep(0.01)
-        cap.release()
+elif input_mode == "Browser Camera (Live Snapshot)":
+    st.info("Allow browser camera access below to take a picture directly from your device.")
+    cam_picture = st.camera_input("Take a photo")
+    if cam_picture:
+        image = Image.open(cam_picture).convert("RGB")
+        process_and_display(image)
