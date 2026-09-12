@@ -1,46 +1,42 @@
-# Hi, I'm Risha👋
-### Machine Learning Engineer | Tabular ML • Agentic GenAI • MLOps • Edge Vision
+# 👁️ Edge Vision Sentinel: Real-Time Spatial Safety & Intrusion Engine
 
-Engineering end-to-end, production-grade machine learning pipelines with a strong focus on low-latency inference, model drift observability, agentic self-healing workflows, and hardware-optimized edge deployment.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![ONNX Runtime](https://img.shields.io/badge/Inference-ONNX%20Runtime%20CPU-purple.svg)](https://onnxruntime.ai/)
+[![Ultralytics YOLOv8](https://img.shields.io/badge/Model-YOLOv8%20Nano-yellow.svg)](https://docs.ultralytics.com/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-Dashboard-red.svg)](https://streamlit.io/)
 
----
-
-## 🚀 Featured Machine Learning Projects
-
-### 🛡️ [Sentinel: Real-Time Fraud & MLOps Drift Engine](https://github.com/rishashankhpale/fraud-drift-sentinel)
-> **Stack:** Python, LightGBM, Isolation Forest, SciPy, Streamlit, Plotly  
-* **Dual-Layer Scoring:** Cost-sensitive LightGBM paired with an unsupervised Isolation Forest for zero-day behavioral anomalies on imbalanced data (~3.5% fraud rate) with sub-50ms inference.
-* **Continuous MLOps Telemetry:** Live statistical drift detection computing Two-sample Kolmogorov-Smirnov (KS) tests and Population Stability Index (PSI) to trigger automated degradation warnings (`STABLE`, `WARNING`, `CRITICAL`).
-* **Live Demo:** [Sentinel Web App](https://share.streamlit.io/) *(replace with your Streamlit Cloud URL)* | **Source:** [GitHub](https://github.com/rishashankhpale/fraud-drift-sentinel)
+A low-latency, edge-optimized Computer Vision pipeline designed for industrial hazard safety and spatial analytics. It leverages CPU-accelerated ONNX Runtime inference, dynamic polygon exclusion zones, and ray-casting intrusion analytics to provide real-time perimeter monitoring.
 
 ---
 
-### 👁️ [Edge Vision Sentinel: Spatial Safety & Intrusion Engine](https://github.com/rishashankhpale/edge-vision-sentinel)
-> **Stack:** Python, YOLOv8, ONNX Runtime, OpenCV, Streamlit  
-* **Edge CPU Acceleration:** Exported YOLOv8 weights into a static ONNX graph executed via multi-threaded `onnxruntime` (`intra_op_num_threads=4`) for real-time CPU throughput.
-* **Spatial Polygon Analytics:** Uses Ray-Casting (`pointPolygonTest`) anchored to bottom-center ground contact points to eliminate false-positive perimeter alerts from bounding box overlap.
-* **Live Demo:** [Vision Web App](https://share.streamlit.io/) *(replace with your Streamlit Cloud URL)* | **Source:** [GitHub](https://github.com/rishashankhpale/edge-vision-sentinel)
+## 🎯 System Architecture & Engineering Highlights
+
+1. **Edge-Optimized CPU Graph Execution:**
+   * PyTorch YOLOv8 weights are exported into a standalone **ONNX graph**, decoupling deployment from large deep learning runtime dependencies.
+   * Leverages **multi-threaded ONNX Runtime** (`intra_op_num_threads=4`, sequential execution mode, and Level-All graph optimization) to deliver real-time sub-50ms inference on commodity multi-core CPUs.
+
+2. **Spatial Geometry & Intrusion Detection:**
+   * Custom pre-processing with aspect-ratio preserved letterboxing and float32 normalization.
+   * Post-processing integrates confidence filtering and Non-Maximum Suppression (NMS, IoU = 0.50).
+   * Calculates intrusion using OpenCV ray-casting (`cv2.pointPolygonTest`) mapped strictly to the **bottom-center ground contact point** of each subject bounding box, eliminating false alarms caused by upper-body overhang or camera perspective angles.
+
+3. **Dual Telemetry Interface:**
+   * Built with Streamlit to support both static image auditing and client-side browser camera live streaming (`st.camera_input`).
+   * Displays live metrics: subject counts, per-frame inference latency (ms), effective throughput (FPS), and automated breach alerts.
 
 ---
 
-### 🤖 [Autonomous AI SQL Agent & Business Analyst](https://github.com/rishashankhpale/ai-sql-agent)
-> **Stack:** Python, Google Gemini Flash, SQLite, Pandas, Plotly, Streamlit  
-* **Self-Healing Agentic Loop:** Catches runtime SQL syntax and constraint exceptions in an execution sandbox, autonomously feeding stack traces back into the model to heal and retry queries.
-* **Dynamic Schema Introspection:** Queries catalog metadata (`sqlite_master`) at runtime to dynamically ground prompts with exact schema relationships.
-* **Live Demo:** [SQL Agent Web App](https://share.streamlit.io/) *(replace with your Streamlit Cloud URL)* | **Source:** [GitHub](https://github.com/rishashankhpale/ai-sql-agent)
+## 📂 Project Structure
 
----
-
-### 🌾 [Agricultural Yield & Climate Prediction Platform](https://github.com/rishashankhpale/agri-yield-predictor)
-> **Stack:** Python, Scikit-Learn, Random Forest, Pandas, Streamlit Cloud  
-* **Leakage-Free Pipeline:** Complete regression pipeline encapsulating `ColumnTransformer` preprocessing and hyperparameter-tuned `RandomForestRegressor` ($R^2 \approx 0.85+$).
-* **Live Demo:** [Agri Predictor Web App](https://share.streamlit.io/) *(replace with your Streamlit Cloud URL)* | **Source:** [GitHub](https://github.com/rishashankhpale/agri-yield-predictor)
-
----
-
-## 🛠️ Technical Stack
-* **Languages & Core:** Python, SQL, C++, Bash
-* **Machine Learning & MLOps:** Scikit-Learn, LightGBM, ONNX Runtime, Drift Monitoring (KS-Test, PSI), MLflow
-* **Deep Learning & Vision:** PyTorch, Ultralytics YOLOv8, OpenCV
-* **GenAI & Agentic Systems:** Google Gemini API, Prompt Engineering, Autonomous Feedback Loops
-* **Deployment & Tooling:** Streamlit Community Cloud, Git, GitHub, Docker (basics)
+```text
+edge-vision-sentinel/
+├── app/
+│   └── app.py                 # Streamlit operational dashboard & UI
+├── models/
+│   └── yolov8n.onnx           # Compiled ONNX execution graph
+├── src/
+│   ├── export_model.py        # Model export & ONNX compilation script
+│   └── spatial_engine.py      # Core inference, NMS, & polygon ray-casting engine
+├── .gitignore
+├── README.md
+└── requirements.txt
